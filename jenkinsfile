@@ -1,0 +1,59 @@
+pipeline {
+	agent any
+
+	environment {
+		// Define env variables for the Git and DocjerHub credentials
+		GIT_REPOSITORY_URL = 'https://github.com/PGDAI2005/docker_jenkins_demo.git'
+		DOCKER_IMAGE_NAME = 'pgdai2005/docker_jenkins_demo'
+		IMAGE_TAG = '1.0' // tag should be string
+	}
+
+	stages {
+		stage('Clone Repository') {
+			steps {
+				// Checkout the Git Repo
+				script {
+					try {
+						git branch: "main", url: GIT_REPOSITORY_URL
+					} catch (Exception e) {
+						echo "FAILED to clone repository: $(e.message)"
+						error "FAILED to Clone Repository"
+					}
+				}
+			}
+		}
+	
+		stage('Build Docker Image') {
+			steps {
+				// Build DockerImage using Dockerfile in repository
+				script {
+					try {
+						docker.build(DOCKER_IMAGE_NAME)
+					} catch (Exception e) {
+						echo "FAILED to Build Docker Image $(e.message)"
+						error "FAILED to Build Docker Image"
+					}
+				}
+			}
+		}
+		
+		stage('Push to DockerHub') {
+			steps {
+				// Log in to DockerHub and push Docker Image
+				script {
+					try {
+						withCredentials([usernamePassword(credentialsId: 'my-docker-hub-credentials-id', 
+usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+						docker.withRegistry('https://index.docker.io/v1/') {
+							docker.image(DOCKER_IMAGE_NAME).push(IMAGE_TAG)
+						}
+					}
+				} catch (Execption e) {
+					echo "FAILED to push Docker Image to registry: $(e.message)"
+					error "FAILED to push Docker Image"
+				}
+			}
+		}
+	}
+}
+}
