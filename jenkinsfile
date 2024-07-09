@@ -48,7 +48,7 @@ usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
 							docker.image(DOCKER_IMAGE_NAME).push(IMAGE_TAG)
 						}
 					}
-				} catch (Execption e) {
+				} catch (Exception e) {
 					echo "FAILED to push Docker Image to registry: ${e.message}"
 					error "FAILED to push Docker Image"
 				}
